@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banco Sandbox — Entorno de pruebas</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="portada">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Ningún dato se envía ni se guarda fuera de esta pestaña.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="index.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <a class="topbar__link" href="login.html" id="btn-ingresar-superior" data-testid="ingresar-superior">Ingresar</a>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <span class="tag">Bre-B disponible</span>
+    <h1>Tu banca en línea, sin salir de casa</h1>
+    <p>Consulta saldos, revisa movimientos y envía dinero en segundos con Bre-B usando una llave: un alias, tu celular, tu cédula o tu correo.</p>
+    <div class="hero__actions">
+      <a class="btn btn--primary" href="login.html" id="btn-login" data-testid="ir-a-login">Ingresar a mi cuenta</a>
+      <a class="btn btn--ghost" href="#que-es-breb" id="btn-conocer-breb" data-testid="conocer-breb">Conocer Bre-B</a>
+    </div>
+  </section>
+
+  <h2 class="section-title" id="que-es-breb">Qué puedes hacer aquí</h2>
+  <div class="actions">
+    <div class="action">
+      <span class="action__name">Enviar con Bre-B</span>
+      <span class="action__hint">Transferencias inmediatas entre entidades, 24 horas al día.</span>
+    </div>
+    <div class="action">
+      <span class="action__name">Revisar movimientos</span>
+      <span class="action__hint">El detalle de tus últimas transacciones por producto.</span>
+    </div>
+    <div class="action">
+      <span class="action__name">Consultar saldos</span>
+      <span class="action__hint">Ahorros y cuenta corriente en una sola pantalla.</span>
+    </div>
+  </div>
+
+  <h2 class="section-title">Para quien está probando</h2>
+  <div class="card">
+    <p>Esta réplica existe para ejercitar agentes autónomos de navegación. Todos los elementos interactivos tienen <code>id</code> y <code>data-testid</code> estables; el panel inferior derecho los muestra sobre la pantalla.</p>
+    <p class="lede">Credenciales: <code>demo.usuario</code> / <code>Sandbox2026</code> · Clave dinámica: <code>123456</code></p>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Normaliza finales de linea entre Windows y Linux
+* text=auto
+*.png  binary
+*.jpg  binary
+*.pptx binary
+*.pdf  binary

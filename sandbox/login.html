@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ingresar — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="login">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Usuario <code>demo.usuario</code> · Clave <code>Sandbox2026</code></span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="index.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+</header>
+
+<main class="page page--narrow">
+  <a class="crumb" href="index.html" data-testid="volver-portada">← Volver a la portada</a>
+
+  <div class="card">
+    <h1>Ingresa a tu cuenta</h1>
+    <p class="lede">Usa tu usuario y tu clave para continuar.</p>
+
+    <div class="alert alert--error" id="alerta-login" data-testid="alerta-login" role="alert" hidden></div>
+    <div class="alert alert--info" id="alerta-sesion" data-testid="alerta-sesion" role="status" hidden>
+      Tu sesión terminó. Ingresa de nuevo para continuar.
+    </div>
+
+    <form id="form-login" data-testid="formulario-login" novalidate autocomplete="off" style="margin-top:20px">
+      <div class="field">
+        <label for="usuario">Usuario</label>
+        <input class="input" type="text" id="usuario" name="usuario"
+               data-testid="campo-usuario" placeholder="demo.usuario" autocomplete="off">
+        <p class="error" id="error-usuario" data-testid="error-usuario"></p>
+      </div>
+
+      <div class="field">
+        <label for="clave">Clave</label>
+        <input class="input" type="password" id="clave" name="clave"
+               data-testid="campo-clave" placeholder="••••••••" autocomplete="off">
+        <p class="error" id="error-clave" data-testid="error-clave"></p>
+      </div>
+
+      <button class="btn btn--primary btn--block" type="submit" id="btn-entrar" data-testid="boton-entrar">
+        Entrar
+      </button>
+    </form>
+
+    <p class="lede" style="margin-top:18px; font-size:.85rem">
+      <a href="#" id="link-olvide-clave" data-testid="olvide-clave">Olvidé mi clave</a>
+    </p>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+
+  if (new URLSearchParams(location.search).get('motivo') === 'sesion') {
+    document.getElementById('alerta-sesion').hidden = false;
+  }
+
+  const form    = document.getElementById('form-login');
+  const usuario = document.getElementById('usuario');
+  const clave   = document.getElementById('clave');
+  const alerta  = document.getElementById('alerta-login');
+
+  function limpiar() {
+    alerta.hidden = true;
+    for (const id of ['error-usuario', 'error-clave']) {
+      document.getElementById(id).textContent = '';
+    }
+    usuario.setAttribute('aria-invalid', 'false');
+    clave.setAttribute('aria-invalid', 'false');
+  }
+
+  function marcar(campo, mensaje) {
+    document.getElementById('error-' + campo).textContent = mensaje;
+    document.getElementById(campo).setAttribute('aria-invalid', 'true');
+  }
+
+  form.addEventListener('submit', (evento) => {
+    evento.preventDefault();
+    limpiar();
+
+    let valido = true;
+    if (!usuario.value.trim()) { marcar('usuario', 'Escribe tu usuario.'); valido = false; }
+    if (!clave.value)          { marcar('clave',   'Escribe tu clave.');   valido = false; }
+    if (!valido) return;
+
+    const ok = usuario.value.trim() === SB.CREDENCIALES.usuario
+            && clave.value === SB.CREDENCIALES.clave;
+
+    if (!ok) {
+      alerta.textContent = 'Usuario o clave incorrectos. Verifica los datos e inténtalo otra vez.';
+      alerta.hidden = false;
+      clave.value = '';
+      clave.focus();
+      return;
+    }
+
+    estado.sesion = true;
+    estado.usuario = usuario.value.trim();
+    SB.guardar(estado);
+    window.location.href = 'inicio.html';
+  });
+
+  document.getElementById('link-olvide-clave').addEventListener('click', (e) => {
+    e.preventDefault();
+    alerta.textContent = 'La recuperación de clave no está disponible en el entorno de pruebas.';
+    alerta.hidden = false;
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+playwright>=1.40            # mask_color en capturas requiere >= 1.35
+sentence-transformers>=2.2
+cryptography>=41
+numpy
+opencv-python>=4.8          # OPCIONAL: solo para la verificacion facial
+# Agrega aqui las dependencias de voz.py (ej. faster-whisper, sounddevice)

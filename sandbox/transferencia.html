@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enviar con Bre-B — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="transferencia">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Llaves válidas: <code>@lucia</code> <code>@marco</code> <code>@ferreteria</code> <code>3105558842</code> <code>1024587963</code> <code>pagos@tienda.co</code></span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page page--narrow">
+  <a class="crumb" href="inicio.html" data-testid="volver-inicio">← Volver a mis productos</a>
+
+  <div class="card">
+    <span class="tag">Bre-B</span>
+    <h1>Enviar dinero</h1>
+    <p class="lede">Escribe la llave de quien recibe. El dinero llega en segundos.</p>
+
+    <div class="alert alert--error" id="alerta-transferencia" data-testid="alerta-transferencia" role="alert" hidden></div>
+
+    <form id="form-transferencia" data-testid="formulario-transferencia" novalidate autocomplete="off" style="margin-top:20px">
+
+      <div class="field">
+        <label for="origen">Cuenta de origen</label>
+        <select class="select" id="origen" name="origen" data-testid="campo-origen"></select>
+        <p class="field__help" id="saldo-disponible" data-testid="saldo-disponible"></p>
+      </div>
+
+      <div class="field">
+        <label for="llave">Llave de destino</label>
+        <p class="field__help">Un alias (@nombre), un número de celular, una cédula o un correo.</p>
+        <input class="input input--mono" type="text" id="llave" name="llave"
+               data-testid="campo-llave" placeholder="@lucia" autocomplete="off">
+        <p class="error" id="error-llave" data-testid="error-llave"></p>
+
+        <button class="btn btn--ghost" type="button" id="btn-consultar-llave"
+                data-testid="boton-consultar-llave" style="margin-top:8px">
+          Consultar llave
+        </button>
+
+        <div class="resolved" id="destino-resuelto" data-testid="destino-resuelto" hidden>
+          <strong id="destino-titular" data-testid="destino-titular"></strong>
+          <span id="destino-entidad" data-testid="destino-entidad"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="monto">Monto a enviar</label>
+        <input class="input" type="text" id="monto" name="monto" inputmode="numeric"
+               data-testid="campo-monto" placeholder="150000" autocomplete="off">
+        <p class="amount-preview" id="monto-formateado" data-testid="monto-formateado"></p>
+        <p class="error" id="error-monto" data-testid="error-monto"></p>
+      </div>
+
+      <div class="field">
+        <label for="descripcion">Descripción <span style="font-weight:400;color:var(--ink-soft)">(opcional)</span></label>
+        <input class="input" type="text" id="descripcion" name="descripcion" maxlength="60"
+               data-testid="campo-descripcion" placeholder="Almuerzo del viernes" autocomplete="off">
+      </div>
+
+      <button class="btn btn--accent btn--block" type="submit" id="btn-continuar" data-testid="boton-continuar">
+        Continuar
+      </button>
+    </form>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const form        = document.getElementById('form-transferencia');
+  const origen      = document.getElementById('origen');
+  const llave       = document.getElementById('llave');
+  const monto       = document.getElementById('monto');
+  const descripcion = document.getElementById('descripcion');
+  const alerta      = document.getElementById('alerta-transferencia');
+  const resuelto    = document.getElementById('destino-resuelto');
+  const btnConsulta = document.getElementById('btn-consultar-llave');
+
+  let destino = null;
+
+  // Cuentas disponibles
+  origen.innerHTML = estado.cuentas
+    .map(c => `<option value="${c.id}">${c.nombre} ${c.numero}</option>`).join('');
+
+  function pintarSaldo() {
+    const c = SB.cuenta(estado, origen.value);
+    document.getElementById('saldo-disponible').textContent = 'Disponible: ' + SB.pesos(c.saldo);
+  }
+  origen.addEventListener('change', pintarSaldo);
+  pintarSaldo();
+
+  // Monto: solo dígitos, con vista previa formateada
+  monto.addEventListener('input', () => {
+    monto.value = monto.value.replace(/\D/g, '');
+    const vista = document.getElementById('monto-formateado');
+    vista.textContent = monto.value ? SB.pesos(Number(monto.value)) : '';
+  });
+
+  // Al cambiar la llave se invalida la consulta anterior
+  llave.addEventListener('input', () => {
+    destino = null;
+    resuelto.hidden = true;
+  });
+
+  function limpiar() {
+    alerta.hidden = true;
+    document.getElementById('error-llave').textContent = '';
+    document.getElementById('error-monto').textContent = '';
+    llave.setAttribute('aria-invalid', 'false');
+    monto.setAttribute('aria-invalid', 'false');
+  }
+
+  function fallar(campo, mensaje) {
+    document.getElementById('error-' + campo).textContent = mensaje;
+    document.getElementById(campo).setAttribute('aria-invalid', 'true');
+  }
+
+  function consultar() {
+    limpiar();
+    const valor = llave.value.trim();
+
+    if (!valor) {
+      fallar('llave', 'Escribe la llave de destino.');
+      return false;
+    }
+
+    const encontrado = SB.buscarLlave(valor);
+    if (!encontrado) {
+      destino = null;
+      resuelto.hidden = true;
+      fallar('llave', 'No encontramos esta llave. Revísala con quien va a recibir el dinero.');
+      return false;
+    }
+
+    destino = { llave: valor, ...encontrado };
+    document.getElementById('destino-titular').textContent = encontrado.titular;
+    document.getElementById('destino-entidad').textContent = encontrado.entidad + ' · ' + valor;
+    resuelto.hidden = false;
+    return true;
+  }
+
+  btnConsulta.addEventListener('click', () => {
+    btnConsulta.disabled = true;
+    btnConsulta.textContent = 'Consultando…';
+    // Latencia simulada: da al agente algo que esperar.
+    setTimeout(() => {
+      consultar();
+      btnConsulta.disabled = false;
+      btnConsulta.textContent = 'Consultar llave';
+    }, 600);
+  });
+
+  form.addEventListener('submit', (evento) => {
+    evento.preventDefault();
+    limpiar();
+
+    if (!destino && !consultar()) return;
+
+    const valor = Number(monto.value);
+    const cuenta = SB.cuenta(estado, origen.value);
+
+    if (!monto.value)              { fallar('monto', 'Escribe el monto que quieres enviar.'); return; }
+    if (valor < 1000)              { fallar('monto', 'El monto mínimo por envío es $ 1.000.'); return; }
+    if (valor > 20000000)          { fallar('monto', 'El monto máximo por envío es $ 20.000.000.'); return; }
+    if (valor > cuenta.saldo) {
+      alerta.textContent = 'Saldo insuficiente. Tienes ' + SB.pesos(cuenta.saldo) + ' en esta cuenta.';
+      alerta.hidden = false;
+      monto.setAttribute('aria-invalid', 'true');
+      return;
+    }
+
+    estado.borrador = {
+      origen: cuenta.id,
+      origenNombre: cuenta.nombre + ' ' + cuenta.numero,
+      llave: destino.llave,
+      titular: destino.titular,
+      entidad: destino.entidad,
+      monto: valor,
+      descripcion: descripcion.value.trim() || 'Sin descripción'
+    };
+    SB.guardar(estado);
+    window.location.href = 'confirmar.html';
+  });
+})();
+</script>
+</body>
+</html>

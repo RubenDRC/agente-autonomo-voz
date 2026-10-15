@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comprobante — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="comprobante">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>No se movió dinero real.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page page--narrow">
+  <div class="card" data-testid="comprobante">
+    <div class="receipt-head">
+      <div class="receipt-head__check" aria-hidden="true">✓</div>
+      <h1 data-testid="mensaje-exito">Dinero enviado</h1>
+      <div class="receipt-head__amount" data-testid="comprobante-monto"></div>
+    </div>
+
+    <ul class="summary" id="detalle"></ul>
+
+    <div style="margin-top:22px; display:grid; gap:10px">
+      <button class="btn btn--ghost" type="button" id="btn-compartir" data-testid="boton-compartir">
+        Compartir comprobante
+      </button>
+      <a class="btn btn--primary" href="inicio.html" id="btn-volver-inicio" data-testid="boton-volver-inicio">
+        Volver a mis productos
+      </a>
+      <a class="btn btn--ghost" href="transferencia.html" id="btn-otro-envio" data-testid="boton-otro-envio">
+        Hacer otro envío
+      </a>
+    </div>
+
+    <p class="error" id="aviso-compartir" data-testid="aviso-compartir" style="margin-top:12px"></p>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const r = estado.ultima;
+  if (!r) {
+    window.location.replace('inicio.html');
+    return;
+  }
+
+  document.querySelector('[data-testid="comprobante-monto"]').textContent = SB.pesos(r.monto);
+  document.getElementById('detalle').innerHTML = `
+    <li><dfn>Para</dfn><b data-testid="comprobante-titular">${r.titular}</b></li>
+    <li><dfn>Llave</dfn><b data-testid="comprobante-llave">${r.llave}</b></li>
+    <li><dfn>Entidad</dfn><b>${r.entidad}</b></li>
+    <li><dfn>Sale de</dfn><b>${r.origenNombre}</b></li>
+    <li><dfn>Descripción</dfn><b>${r.descripcion}</b></li>
+    <li><dfn>Fecha</dfn><b data-testid="comprobante-fecha">${r.fecha}</b></li>
+    <li><dfn>Número de comprobante</dfn><b data-testid="comprobante-numero">${r.comprobante}</b></li>`;
+
+  document.getElementById('btn-compartir').addEventListener('click', () => {
+    document.getElementById('aviso-compartir').textContent =
+      'Compartir no está disponible en el entorno de pruebas.';
+  });
+})();
+</script>
+</body>
+</html>

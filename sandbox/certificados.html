@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificados — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="certificados">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>El certificado generado no tiene validez legal.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page page--narrow">
+  <a class="crumb" href="inicio.html" data-testid="volver-inicio">← Volver a mis productos</a>
+
+  <div class="card">
+    <h1>Generar certificado</h1>
+    <p class="lede">Elige el producto y el tipo de certificado. Se expide al instante y sin costo.</p>
+
+    <div class="alert alert--error" id="alerta-certificado" data-testid="alerta-certificado" role="alert" hidden></div>
+
+    <form id="form-certificado" data-testid="formulario-certificado" novalidate autocomplete="off" style="margin-top:20px">
+
+      <div class="field">
+        <label for="producto">Producto</label>
+        <select class="select" id="producto" name="producto" data-testid="campo-producto"></select>
+      </div>
+
+      <div class="field">
+        <label for="tipo">Tipo de certificado</label>
+        <select class="select" id="tipo" name="tipo" data-testid="campo-tipo">
+          <option value="">Selecciona un tipo</option>
+          <option value="titularidad">Titularidad de la cuenta</option>
+          <option value="saldo">Titularidad con saldo a la fecha</option>
+          <option value="tributario">Certificado tributario anual</option>
+        </select>
+        <p class="field__help" id="ayuda-tipo" data-testid="ayuda-tipo"></p>
+        <p class="error" id="error-tipo" data-testid="error-tipo"></p>
+      </div>
+
+      <div class="field" id="campo-anio-contenedor" hidden>
+        <label for="anio">Año gravable</label>
+        <select class="select" id="anio" name="anio" data-testid="campo-anio">
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="dirigido">Dirigido a <span style="font-weight:400;color:var(--ink-soft)">(opcional)</span></label>
+        <input class="input" type="text" id="dirigido" name="dirigido" maxlength="60"
+               data-testid="campo-dirigido" placeholder="Embajada de Canadá" autocomplete="off">
+        <p class="field__help">Si lo dejas vacío, el certificado se expide a quien interese.</p>
+      </div>
+
+      <button class="btn btn--primary btn--block" type="submit" id="btn-generar" data-testid="boton-generar-certificado">
+        Generar certificado
+      </button>
+    </form>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const AYUDAS = {
+    titularidad: 'Acredita que la cuenta existe, está activa y es tuya. No muestra el saldo.',
+    saldo:       'Incluye el saldo disponible al momento de la expedición.',
+    tributario:  'Reporta los saldos y rendimientos del año gravable, para tu declaración de renta.'
+  };
+
+  const form      = document.getElementById('form-certificado');
+  const producto  = document.getElementById('producto');
+  const tipo      = document.getElementById('tipo');
+  const anioCaja  = document.getElementById('campo-anio-contenedor');
+  const ayudaTipo = document.getElementById('ayuda-tipo');
+  const error     = document.getElementById('error-tipo');
+  const alerta    = document.getElementById('alerta-certificado');
+  const boton     = document.getElementById('btn-generar');
+
+  producto.innerHTML = estado.cuentas
+    .map(c => `<option value="${c.id}">${c.nombre} ${c.numero}</option>`).join('');
+
+  tipo.addEventListener('change', () => {
+    ayudaTipo.textContent = AYUDAS[tipo.value] || '';
+    anioCaja.hidden = tipo.value !== 'tributario';
+    error.textContent = '';
+  });
+
+  form.addEventListener('submit', (evento) => {
+    evento.preventDefault();
+    error.textContent = '';
+    alerta.hidden = true;
+
+    if (!tipo.value) {
+      error.textContent = 'Selecciona el tipo de certificado que necesitas.';
+      tipo.focus();
+      return;
+    }
+
+    const cuenta = SB.cuenta(estado, producto.value);
+
+    // La cuenta corriente se abrió en 2023: no hay datos tributarios anteriores.
+    if (tipo.value === 'tributario') {
+      const anio = Number(document.getElementById('anio').value);
+      const apertura = Number(cuenta.apertura.slice(0, 4));
+      if (anio < apertura) {
+        alerta.textContent = 'Esta cuenta se abrió en ' + apertura +
+          '. No hay información tributaria para el año ' + anio + '.';
+        alerta.hidden = false;
+        return;
+      }
+    }
+
+    boton.disabled = true;
+    boton.textContent = 'Generando…';
+
+    // Latencia simulada de expedición.
+    setTimeout(() => {
+      estado.certificado = {
+        tipo: tipo.value,
+        anio: tipo.value === 'tributario' ? document.getElementById('anio').value : null,
+        cuenta: cuenta.id,
+        dirigido: document.getElementById('dirigido').value.trim() || 'A QUIEN INTERESE',
+        folio: SB.folio(),
+        verificacion: Math.random().toString(36).slice(2, 10).toUpperCase(),
+        expedido: new Date().toISOString().slice(0, 10),
+        saldo: cuenta.saldo
+      };
+      SB.guardar(estado);
+      window.location.href = 'certificado.html';
+    }, 900);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mis productos — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="inicio">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Los saldos y movimientos son ficticios.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page">
+  <h1>Mis productos</h1>
+  <p class="lede">Consolidado al 12 de agosto de 2026.</p>
+
+  <div class="card" style="margin-top:18px" data-testid="lista-productos">
+    <div id="cuentas"></div>
+  </div>
+
+  <h2 class="section-title">¿Qué quieres hacer?</h2>
+  <div class="actions">
+    <a class="action action--feature" href="transferencia.html" id="btn-breb" data-testid="accion-breb">
+      <span class="tag">Bre-B</span>
+      <span class="action__name">Enviar dinero</span>
+      <span class="action__hint">Transfiere con una llave a cualquier entidad, en segundos.</span>
+    </a>
+
+    <a class="action" href="movimientos.html" id="btn-movimientos" data-testid="accion-movimientos">
+      <span class="action__name">Movimientos</span>
+      <span class="action__hint">Últimas transacciones de tus cuentas.</span>
+    </a>
+
+    <a class="action" href="seccion.html?s=pagos" id="btn-pagos" data-testid="accion-pagos">
+      <span class="action__name">Pagar facturas</span>
+      <span class="action__hint">Servicios públicos, impuestos y convenios.</span>
+    </a>
+
+    <a class="action" href="seccion.html?s=recargas" id="btn-recargas" data-testid="accion-recargas">
+      <span class="action__name">Recargar celular</span>
+      <span class="action__hint">Minutos y datos para cualquier operador.</span>
+    </a>
+
+    <a class="action" href="seccion.html?s=tarjetas" id="btn-tarjetas" data-testid="accion-tarjetas">
+      <span class="action__name">Mis tarjetas</span>
+      <span class="action__hint">Cupos, bloqueos y avances.</span>
+    </a>
+
+    <a class="action" href="certificados.html" id="btn-certificados" data-testid="accion-certificados">
+      <span class="action__name">Certificados</span>
+      <span class="action__hint">Titularidad, saldo y certificado tributario.</span>
+    </a>
+
+    <a class="action" href="seccion.html?s=llaves" id="btn-llaves" data-testid="accion-llaves">
+      <span class="action__name">Mis llaves Bre-B</span>
+      <span class="action__hint">Registra o elimina las llaves de tus cuentas.</span>
+    </a>
+
+    <a class="action" href="ayuda.html" id="btn-ayuda" data-testid="accion-ayuda">
+      <span class="action__name">Ayuda</span>
+      <span class="action__hint">Preguntas frecuentes y canales de atención.</span>
+    </a>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  document.getElementById('cuentas').innerHTML = estado.cuentas.map(c => `
+    <div class="account" data-testid="producto-${c.id}">
+      <div>
+        <div class="account__name">${c.nombre}</div>
+        <div class="account__num">${c.numero}</div>
+      </div>
+      <div class="account__amount" data-testid="saldo-${c.id}">${SB.pesos(c.saldo)}</div>
+    </div>`).join('');
+})();
+</script>
+</body>
+</html>

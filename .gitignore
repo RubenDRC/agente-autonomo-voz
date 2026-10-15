@@ -1,0 +1,28 @@
+# ---- Seguridad: NUNCA versionar ----
+credenciales.wallet
+*.wallet
+*.tmp
+
+# ---- Evidencia de ejecucion y datos personales (voz, capturas) ----
+auditoria/
+agente_resultado.png
+*.wav
+*.mp3
+
+# ---- Modelos descargados (se bajan solos la primera vez) ----
+modelos/
+*.onnx
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# ---- Sistema y editores ----
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+.vscode/

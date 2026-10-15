@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificado bancario — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="certificado">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Documento ficticio, sin validez legal.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page">
+  <a class="crumb" href="certificados.html" data-testid="volver-certificados">← Generar otro certificado</a>
+
+  <article class="doc" id="documento" data-testid="documento-certificado">
+    <div class="doc__head">
+      <span class="doc__mark">BS</span>
+      <div>
+        <div class="doc__bank">Banco Sandbox S.A.</div>
+        <div class="doc__nit">NIT 900.000.000-1</div>
+      </div>
+      <div class="doc__folio">
+        <div data-testid="certificado-folio"></div>
+        <div data-testid="certificado-ciudad-fecha"></div>
+      </div>
+    </div>
+
+    <h1 class="doc__title" data-testid="certificado-titulo"></h1>
+
+    <div class="doc__body">
+      <p data-testid="certificado-dirigido"></p>
+      <div id="cuerpo"></div>
+      <ul class="doc__facts" id="datos"></ul>
+      <p id="cierre"></p>
+    </div>
+
+    <div class="doc__sign">
+      <div class="doc__stamp" data-testid="sello-simulacion">DOCUMENTO DE PRUEBA</div>
+      <div class="doc__sign-line">
+        Gerencia de Operaciones
+        <span>Banco Sandbox S.A.</span>
+      </div>
+    </div>
+
+    <div class="doc__foot">
+      <p>Verifica la autenticidad de este documento en bancosandbox.co/verificar con el código
+        <strong data-testid="certificado-verificacion"></strong>. Vigencia de 30 días a partir de la fecha de expedición.</p>
+      <p>Documento generado electrónicamente. No requiere firma autógrafa.</p>
+    </div>
+  </article>
+
+  <div class="no-print" style="max-width:720px; margin:22px auto 0; display:grid; gap:10px">
+    <button class="btn btn--primary" type="button" id="btn-descargar" data-testid="boton-descargar">
+      Descargar o imprimir
+    </button>
+    <a class="btn btn--ghost" href="certificados.html" id="btn-otro" data-testid="boton-otro-certificado">
+      Generar otro certificado
+    </a>
+    <a class="btn btn--ghost" href="inicio.html" id="btn-inicio" data-testid="boton-volver-inicio">
+      Volver a mis productos
+    </a>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const c = estado.certificado;
+  if (!c) {
+    window.location.replace('certificados.html');
+    return;
+  }
+
+  const cuenta  = SB.cuenta(estado, c.cuenta);
+  const titular = estado.titular;
+  const fecha   = SB.fechaLarga(c.expedido);
+
+  const TITULOS = {
+    titularidad: 'Certificación de titularidad',
+    saldo:       'Certificación de titularidad y saldo',
+    tributario:  'Certificado tributario ' + c.anio
+  };
+
+  document.querySelector('[data-testid="certificado-titulo"]').textContent = TITULOS[c.tipo];
+  document.querySelector('[data-testid="certificado-folio"]').textContent = c.folio;
+  document.querySelector('[data-testid="certificado-ciudad-fecha"]').textContent = titular.ciudad + ', ' + fecha;
+  document.querySelector('[data-testid="certificado-dirigido"]').textContent = c.dirigido.toUpperCase();
+  document.querySelector('[data-testid="certificado-verificacion"]').textContent = c.verificacion;
+
+  // Cuerpo según el tipo solicitado.
+  const cuerpo = document.getElementById('cuerpo');
+  if (c.tipo === 'tributario') {
+    const rendimientos = Math.round(cuenta.saldo * 0.0312);
+    const retencion    = Math.round(rendimientos * 0.07);
+    cuerpo.innerHTML = `
+      <p>El <strong>BANCO SANDBOX S.A.</strong> certifica que <strong>${titular.nombre}</strong>,
+      identificado con ${titular.documento}, registró durante el año gravable <strong>${c.anio}</strong>
+      los siguientes movimientos en el producto que se relaciona a continuación:</p>`;
+    document.getElementById('datos').innerHTML = `
+      <li><dfn>Producto</dfn><b data-testid="dato-producto">${cuenta.nombre} No. ${cuenta.completo}</b></li>
+      <li><dfn>Año gravable</dfn><b data-testid="dato-anio">${c.anio}</b></li>
+      <li><dfn>Saldo a 31 de diciembre</dfn><b data-testid="dato-saldo">${SB.pesos(cuenta.saldo)}</b></li>
+      <li><dfn>Rendimientos financieros</dfn><b data-testid="dato-rendimientos">${SB.pesos(rendimientos)}</b></li>
+      <li><dfn>Retención en la fuente</dfn><b data-testid="dato-retencion">${SB.pesos(retencion)}</b></li>`;
+    document.getElementById('cierre').innerHTML =
+      `Esta información fue reportada a la Dirección de Impuestos y Aduanas Nacionales conforme a la
+       normatividad vigente. Se expide en ${titular.ciudad} el ${fecha}, a solicitud del interesado.`;
+
+  } else {
+    const incluyeSaldo = c.tipo === 'saldo';
+    cuerpo.innerHTML = `
+      <p>El <strong>BANCO SANDBOX S.A.</strong>, entidad vigilada por la Superintendencia Financiera
+      de Colombia, certifica que <strong>${titular.nombre}</strong>, identificado con
+      ${titular.documento}, es titular del siguiente producto, el cual se encuentra
+      <strong>activo</strong> a la fecha de expedición:</p>`;
+
+    const filaSaldo = incluyeSaldo
+      ? `<li><dfn>Saldo disponible</dfn><b data-testid="dato-saldo">${SB.pesos(cuenta.saldo)}</b></li>`
+      : '';
+
+    document.getElementById('datos').innerHTML = `
+      <li><dfn>Producto</dfn><b data-testid="dato-producto">${cuenta.nombre}</b></li>
+      <li><dfn>Número</dfn><b data-testid="dato-numero">${cuenta.completo}</b></li>
+      <li><dfn>Fecha de apertura</dfn><b data-testid="dato-apertura">${SB.fechaLarga(cuenta.apertura)}</b></li>
+      <li><dfn>Estado</dfn><b data-testid="dato-estado">Activa</b></li>
+      ${filaSaldo}`;
+
+    document.getElementById('cierre').innerHTML = incluyeSaldo
+      ? `El saldo disponible a la fecha asciende a la suma de
+         <strong data-testid="saldo-en-letras">${SB.montoFormal(cuenta.saldo)}</strong>.
+         Se expide en ${titular.ciudad} el ${fecha}, a solicitud del interesado.`
+      : `Se expide en ${titular.ciudad} el ${fecha}, a solicitud del interesado,
+         para los fines que este estime convenientes.`;
+  }
+
+  document.getElementById('btn-descargar').addEventListener('click', () => window.print());
+})();
+</script>
+</body>
+</html>

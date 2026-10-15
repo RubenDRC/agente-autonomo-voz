@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmar envío — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="confirmar">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Clave dinámica de prueba: <code>123456</code></span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page page--narrow">
+  <a class="crumb" href="transferencia.html" data-testid="volver-transferencia">← Corregir datos</a>
+
+  <div class="card">
+    <h1>Revisa antes de enviar</h1>
+    <p class="lede">Una vez confirmado, el envío no se puede reversar.</p>
+
+    <ul class="summary" id="resumen" data-testid="resumen-transferencia" style="margin-top:18px"></ul>
+
+    <div class="alert alert--error" id="alerta-confirmar" data-testid="alerta-confirmar" role="alert" hidden style="margin-top:20px"></div>
+
+    <form id="form-confirmar" data-testid="formulario-confirmar" novalidate autocomplete="off" style="margin-top:22px">
+      <div class="field">
+        <label for="dinamica">Clave dinámica</label>
+        <p class="field__help">Escribe los 6 dígitos que aparecen en tu token.</p>
+        <input class="input input--mono" type="text" id="dinamica" name="dinamica"
+               maxlength="6" inputmode="numeric" data-testid="campo-clave-dinamica"
+               placeholder="000000" autocomplete="off">
+        <p class="error" id="error-dinamica" data-testid="error-clave-dinamica"></p>
+      </div>
+
+      <button class="btn btn--accent btn--block" type="submit" id="btn-confirmar" data-testid="boton-confirmar">
+        Enviar dinero
+      </button>
+      <a class="btn btn--ghost btn--block" href="inicio.html" id="btn-cancelar"
+         data-testid="boton-cancelar" style="margin-top:10px">Cancelar</a>
+    </form>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const borrador = estado.borrador;
+  if (!borrador) {
+    window.location.replace('transferencia.html');
+    return;
+  }
+
+  document.getElementById('resumen').innerHTML = `
+    <li><dfn>Para</dfn><b data-testid="resumen-titular">${borrador.titular}</b></li>
+    <li><dfn>Llave</dfn><b data-testid="resumen-llave">${borrador.llave}</b></li>
+    <li><dfn>Entidad</dfn><b data-testid="resumen-entidad">${borrador.entidad}</b></li>
+    <li><dfn>Sale de</dfn><b data-testid="resumen-origen">${borrador.origenNombre}</b></li>
+    <li><dfn>Descripción</dfn><b data-testid="resumen-descripcion">${borrador.descripcion}</b></li>
+    <li><dfn>Costo del envío</dfn><b data-testid="resumen-costo">$ 0</b></li>
+    <li class="is-total"><dfn>Total</dfn><b data-testid="resumen-monto">${SB.pesos(borrador.monto)}</b></li>`;
+
+  const form     = document.getElementById('form-confirmar');
+  const dinamica = document.getElementById('dinamica');
+  const alerta   = document.getElementById('alerta-confirmar');
+  const error    = document.getElementById('error-dinamica');
+
+  dinamica.addEventListener('input', () => {
+    dinamica.value = dinamica.value.replace(/\D/g, '');
+  });
+
+  form.addEventListener('submit', (evento) => {
+    evento.preventDefault();
+    alerta.hidden = true;
+    error.textContent = '';
+    dinamica.setAttribute('aria-invalid', 'false');
+
+    if (dinamica.value.length !== 6) {
+      error.textContent = 'La clave dinámica tiene 6 dígitos.';
+      dinamica.setAttribute('aria-invalid', 'true');
+      return;
+    }
+
+    if (dinamica.value !== SB.CLAVE_DINAMICA) {
+      alerta.textContent = 'Clave dinámica incorrecta. Genera una nueva en tu token e inténtalo otra vez.';
+      alerta.hidden = false;
+      dinamica.value = '';
+      dinamica.focus();
+      return;
+    }
+
+    // Aplica el movimiento sobre el estado simulado.
+    const cuenta = SB.cuenta(estado, borrador.origen);
+    cuenta.saldo -= borrador.monto;
+
+    estado.movimientos.unshift({
+      fecha: new Date().toISOString().slice(0, 10),
+      concepto: 'Bre-B enviada a ' + borrador.llave,
+      cuenta: borrador.origen,
+      valor: -borrador.monto
+    });
+
+    estado.ultima = {
+      ...borrador,
+      comprobante: SB.comprobante(),
+      fecha: new Date().toLocaleString('es-CO')
+    };
+    estado.borrador = null;
+    SB.guardar(estado);
+
+    window.location.href = 'comprobante.html';
+  });
+})();
+</script>
+</body>
+</html>

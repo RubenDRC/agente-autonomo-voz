@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movimientos — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="movimientos">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Movimientos ficticios generados en el navegador.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page">
+  <a class="crumb" href="inicio.html" data-testid="volver-inicio">← Volver a mis productos</a>
+  <h1>Movimientos</h1>
+
+  <div class="card" style="margin-top:18px">
+    <div class="field" style="max-width:320px; margin-bottom:14px">
+      <label for="filtro">Producto</label>
+      <select class="select" id="filtro" data-testid="filtro-cuenta">
+        <option value="todas">Todas mis cuentas</option>
+        <option value="ahorros">Cuenta de ahorros ••••4821</option>
+        <option value="corriente">Cuenta corriente ••••7734</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table data-testid="tabla-movimientos">
+        <thead>
+          <tr><th>Fecha</th><th>Concepto</th><th>Producto</th><th style="text-align:right">Valor</th></tr>
+        </thead>
+        <tbody id="filas"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const nombres = { ahorros: 'Ahorros ••••4821', corriente: 'Corriente ••••7734' };
+  const filtro  = document.getElementById('filtro');
+  const cuerpo  = document.getElementById('filas');
+
+  function pintar() {
+    const lista = filtro.value === 'todas'
+      ? estado.movimientos
+      : estado.movimientos.filter(m => m.cuenta === filtro.value);
+
+    if (!lista.length) {
+      cuerpo.innerHTML = `<tr><td colspan="4" data-testid="sin-movimientos">
+        Esta cuenta todavía no registra movimientos.</td></tr>`;
+      return;
+    }
+
+    cuerpo.innerHTML = lista.map((m, i) => `
+      <tr data-testid="movimiento-${i}">
+        <td class="date">${m.fecha}</td>
+        <td>${m.concepto}</td>
+        <td>${nombres[m.cuenta]}</td>
+        <td class="num ${m.valor < 0 ? 'is-out' : 'is-in'}">
+          ${m.valor < 0 ? '−' : '+'} ${SB.pesos(m.valor)}
+        </td>
+      </tr>`).join('');
+  }
+
+  filtro.addEventListener('change', pintar);
+  pintar();
+})();
+</script>
+</body>
+</html>

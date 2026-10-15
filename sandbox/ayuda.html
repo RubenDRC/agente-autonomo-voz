@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preguntas frecuentes — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="ayuda">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Los canales de atención son ficticios.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page">
+  <a class="crumb" href="inicio.html" data-testid="volver-inicio">← Volver a mis productos</a>
+  <h1>Preguntas frecuentes</h1>
+  <p class="lede">Busca por palabra clave o abre la pregunta que te interese.</p>
+
+  <div class="field" style="max-width:420px; margin-top:20px">
+    <label for="buscar">Buscar en las preguntas</label>
+    <input class="input" type="search" id="buscar" data-testid="campo-buscar-pregunta"
+           placeholder="llave, horario, costo…" autocomplete="off">
+    <p class="field__help" id="conteo" data-testid="conteo-resultados"></p>
+  </div>
+
+  <div class="faq" id="faq" data-testid="lista-preguntas"></div>
+
+  <p class="faq-empty" id="sin-resultados" data-testid="sin-resultados" hidden>
+    Ninguna pregunta coincide con esa búsqueda. Prueba con otra palabra o consulta los canales de atención.
+  </p>
+
+  <h2 class="section-title">Canales de atención</h2>
+  <div class="card">
+    <div class="contact-grid" data-testid="canales-atencion">
+      <div><dfn>Línea nacional</dfn><b>01 8000 000 000</b></div>
+      <div><dfn>Bogotá</dfn><b>(601) 000 0000</b></div>
+      <div><dfn>WhatsApp</dfn><b>300 000 0000</b></div>
+      <div><dfn>Correo</dfn><b>contacto@bancosandbox.co</b></div>
+      <div><dfn>Horario</dfn><b>Lunes a viernes, 7:00 a 19:00</b></div>
+      <div><dfn>Bloqueo de productos</dfn><b>24 horas, todos los días</b></div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const PREGUNTAS = [
+    { id: 'que-es-llave', grupo: 'Bre-B',
+      p: '¿Qué es una llave Bre-B?',
+      r: ['Una llave es el dato sencillo con el que otras personas te envían dinero sin necesitar tu número de cuenta. Puede ser un alias que empiece por arroba, tu número de celular, tu documento de identidad o tu correo electrónico.',
+          'Cada llave apunta a una sola cuenta. Puedes registrar varias llaves y decidir a cuál cuenta llega el dinero de cada una.'] },
+
+    { id: 'registrar-llave', grupo: 'Bre-B',
+      p: '¿Cómo registro o cambio mi llave?',
+      r: ['Entra a "Mis llaves Bre-B" desde la pantalla de productos. Allí registras una llave nueva, la trasladas a otra cuenta o la eliminas.',
+          'Una llave solo puede estar registrada en una entidad a la vez. Si ya la tienes en otro banco, primero debes eliminarla allá.'] },
+
+    { id: 'costo-breb', grupo: 'Bre-B',
+      p: '¿Cuánto cuesta enviar dinero con Bre-B?',
+      r: ['Los envíos entre personas no tienen costo, sin importar la entidad que recibe. El comprobante siempre muestra el costo aplicado antes de que confirmes.'] },
+
+    { id: 'horario-breb', grupo: 'Bre-B',
+      p: '¿A qué hora puedo transferir?',
+      r: ['Bre-B funciona las 24 horas, todos los días del año, incluidos festivos. El dinero llega en segundos.'] },
+
+    { id: 'limites', grupo: 'Bre-B',
+      p: '¿Cuáles son los montos mínimo y máximo?',
+      r: ['El mínimo por envío es $ 1.000 y el máximo es $ 20.000.000. Si necesitas mover una suma mayor, hazlo en varios envíos o acércate a una oficina.'] },
+
+    { id: 'llave-no-existe', grupo: 'Bre-B',
+      p: 'Escribí una llave y dice que no existe',
+      r: ['Revisa que esté escrita igual que como te la compartieron: los alias empiezan por arroba, los celulares van sin espacios ni indicativo, y los correos incluyen el dominio completo.',
+          'Si el dato es correcto, es probable que quien recibe todavía no haya registrado esa llave en su banco.'] },
+
+    { id: 'reversar', grupo: 'Bre-B',
+      p: '¿Puedo reversar una transferencia?',
+      r: ['No. Una vez confirmada, la transferencia es inmediata e irreversible. Por eso la pantalla de confirmación te muestra el nombre de quien recibe antes de enviar: verifícalo siempre.',
+          'Si enviaste dinero a la llave equivocada, comunícate con la línea nacional para intentar una gestión de devolución con la otra entidad. No hay garantía de recuperación.'] },
+
+    { id: 'clave-dinamica', grupo: 'Seguridad',
+      p: '¿Qué es la clave dinámica y dónde la consigo?',
+      r: ['Es un código de 6 dígitos que cambia cada minuto y confirma que eres tú quien autoriza la operación. Se genera en la aplicación móvil, en la sección de token.',
+          'El banco nunca te la pide por teléfono, correo ni mensaje de texto.'] },
+
+    { id: 'olvide-clave', grupo: 'Seguridad',
+      p: 'Olvidé mi clave, ¿cómo la recupero?',
+      r: ['Usa el enlace "Olvidé mi clave" en la pantalla de ingreso. Te pediremos datos de tus productos para verificar tu identidad y podrás crear una nueva.'] },
+
+    { id: 'bloqueo', grupo: 'Seguridad',
+      p: 'Perdí mi celular, ¿qué hago?',
+      r: ['Llama de inmediato a la línea de bloqueo, disponible 24 horas. Bloquearemos el acceso a la banca en línea y desactivaremos el token de ese dispositivo.'] },
+
+    { id: 'certificado-como', grupo: 'Certificados',
+      p: '¿Cómo obtengo un certificado bancario?',
+      r: ['Entra a "Certificados" desde la pantalla de productos, elige el producto y el tipo de certificado, y genéralo. Puedes descargarlo o imprimirlo enseguida.'] },
+
+    { id: 'certificado-validez', grupo: 'Certificados',
+      p: '¿El certificado que descargo tiene validez?',
+      r: ['Sí. Cada certificado lleva un número de folio y un código de verificación que quien lo recibe puede consultar en nuestra página. La vigencia es de 30 días desde la fecha de expedición.'] },
+
+    { id: 'certificado-costo', grupo: 'Certificados',
+      p: '¿Cobran por expedir certificados?',
+      r: ['Los certificados generados en la banca en línea no tienen costo. En oficina se cobra la tarifa vigente.'] },
+
+    { id: 'movimientos-antiguos', grupo: 'Productos',
+      p: '¿Puedo ver movimientos de meses anteriores?',
+      r: ['La pantalla de movimientos muestra las transacciones recientes. Para períodos anteriores, descarga el extracto correspondiente desde "Certificados".'] }
+  ];
+
+  const faq    = document.getElementById('faq');
+  const buscar = document.getElementById('buscar');
+  const conteo = document.getElementById('conteo');
+  const vacio  = document.getElementById('sin-resultados');
+
+  // Agrupa manteniendo el orden de aparición.
+  const grupos = [...new Set(PREGUNTAS.map(q => q.grupo))];
+
+  faq.innerHTML = grupos.map(g => `
+    <div class="faq-group" data-grupo="${g}">${g}</div>
+    ${PREGUNTAS.filter(q => q.grupo === g).map(q => `
+      <details class="faq__item" id="pregunta-${q.id}" data-testid="pregunta-${q.id}">
+        <summary data-testid="abrir-${q.id}">${q.p}</summary>
+        <div class="faq__answer" data-testid="respuesta-${q.id}">
+          ${q.r.map(t => `<p>${t}</p>`).join('')}
+        </div>
+      </details>`).join('')}`).join('');
+
+  function filtrar() {
+    const texto = buscar.value.trim().toLowerCase();
+    let visibles = 0;
+
+    PREGUNTAS.forEach(q => {
+      const nodo = document.getElementById('pregunta-' + q.id);
+      const coincide = !texto
+        || q.p.toLowerCase().includes(texto)
+        || q.r.join(' ').toLowerCase().includes(texto);
+      nodo.hidden = !coincide;
+      if (!coincide) nodo.open = false;
+      if (coincide) visibles++;
+    });
+
+    // Oculta el encabezado de un grupo si ninguna de sus preguntas quedó visible.
+    grupos.forEach(g => {
+      const tieneVisibles = PREGUNTAS.some(q =>
+        q.grupo === g && !document.getElementById('pregunta-' + q.id).hidden);
+      faq.querySelector(`[data-grupo="${g}"]`).hidden = !tieneVisibles;
+    });
+
+    vacio.hidden = visibles > 0;
+    faq.hidden = visibles === 0;
+    conteo.textContent = texto
+      ? visibles + (visibles === 1 ? ' pregunta encontrada' : ' preguntas encontradas')
+      : PREGUNTAS.length + ' preguntas en total';
+  }
+
+  buscar.addEventListener('input', filtrar);
+  filtrar();
+})();
+</script>
+</body>
+</html>

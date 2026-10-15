@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sección — Banco Sandbox</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-pagina="seccion">
+
+<div class="sandbox-bar" data-testid="aviso-simulacion">
+  <strong>Entorno simulado.</strong>
+  <span>Esta sección existe para probar cómo reacciona el agente ante un camino cerrado.</span>
+</div>
+
+<header class="topbar">
+  <a class="topbar__brand" href="inicio.html" data-testid="logo">
+    <span class="topbar__mark">BS</span> Banco Sandbox
+  </a>
+  <div class="topbar__spacer"></div>
+  <span class="topbar__user" data-campo="usuario-activo" data-testid="usuario-activo"></span>
+  <button class="topbar__link" type="button" data-accion="salir" id="btn-salir" data-testid="cerrar-sesion">
+    Cerrar sesión
+  </button>
+</header>
+
+<main class="page page--narrow">
+  <a class="crumb" href="inicio.html" data-testid="volver-inicio">← Volver a mis productos</a>
+
+  <div class="card">
+    <h1 id="titulo" data-testid="titulo-seccion"></h1>
+    <p class="lede" id="descripcion" data-testid="descripcion-seccion"></p>
+    <p class="lede" style="margin-top:14px">
+      Esta pantalla no está construida en el entorno de pruebas. La única operación completa es
+      <strong>enviar dinero con Bre-B</strong>.
+    </p>
+    <div style="margin-top:22px; display:grid; gap:10px">
+      <a class="btn btn--accent" href="transferencia.html" data-testid="ir-a-breb">Ir a enviar con Bre-B</a>
+      <a class="btn btn--ghost" href="inicio.html" data-testid="ir-a-inicio">Volver a mis productos</a>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  const estado = SB.leer();
+  if (!SB.exigirSesion(estado)) return;
+
+  const secciones = {
+    pagos:        ['Pagar facturas', 'Servicios públicos, impuestos y convenios registrados.'],
+    recargas:     ['Recargar celular', 'Minutos y paquetes de datos para cualquier operador.'],
+    tarjetas:     ['Mis tarjetas', 'Cupos disponibles, bloqueos y avances.'],
+    llaves:       ['Mis llaves Bre-B', 'Registra, cambia o elimina las llaves de tus cuentas.']
+  };
+
+  const clave = new URLSearchParams(location.search).get('s');
+  const [titulo, descripcion] = secciones[clave] || ['Sección no encontrada', 'La dirección no corresponde a ninguna sección.'];
+
+  document.getElementById('titulo').textContent = titulo;
+  document.getElementById('descripcion').textContent = descripcion;
+  document.title = titulo + ' — Banco Sandbox';
+})();
+</script>
+</body>
+</html>
