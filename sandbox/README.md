@@ -33,12 +33,38 @@ php -S localhost:5173  # PHP
 
 ## Recorrido
 
+```mermaid
+flowchart LR
+    P["Portada<br/>index.html"] -- "Ingresar a mi cuenta" --> L["Ingreso<br/>login.html"]
+    L -- "Entrar<br/>(usuario + clave)" --> I["Mis productos<br/>inicio.html"]
+
+    I -- "Enviar dinero" --> T
+
+    subgraph BREB ["Transferencia Bre-B"]
+        direction LR
+        T["Envío<br/>transferencia.html"] -- "Continuar" --> C["Confirmación<br/>confirmar.html"]
+        C -- "Enviar dinero<br/>(clave dinámica)" --> K["Comprobante<br/>comprobante.html"]
+        C -. "Corregir datos" .-> T
+    end
+
+    I -- "Movimientos" --> M["Movimientos<br/>movimientos.html"]
+    I -- "Certificados" --> CS["Certificados<br/>certificados.html"]
+    CS -- "Generar certificado" --> CD["Certificado<br/>certificado.html"]
+    I -- "Ayuda" --> A["Preguntas frecuentes<br/>ayuda.html"]
+    I -.-> S["Sección no disponible<br/>seccion.html?s=…<br/>pagos · recargas<br/>tarjetas · llaves"]
+
+    classDef cerrado stroke-dasharray: 5 5
+    class S cerrado
 ```
-index.html → login.html → inicio.html → transferencia.html → confirmar.html → comprobante.html
-                                     ├→ movimientos.html
-                                     ├→ certificados.html → certificado.html
-                                     ├→ ayuda.html
-                                     └→ seccion.html?s=… (caminos cerrados a propósito)
+
+Las flechas continuas son el recorrido principal; las punteadas, retornos y caminos cerrados a propósito. Todas las pantallas internas tienen además un enlace para volver a `inicio.html`.
+
+### Reglas de sesión
+
+```mermaid
+flowchart LR
+    X["Página interna<br/>sin sesión activa"] -. "redirección automática" .-> L["Ingreso<br/>login.html?motivo=sesion"]
+    Y["Página interna<br/>con sesión activa"] -- "Cerrar sesión" --> P["Portada<br/>index.html"]
 ```
 
 Las páginas internas redirigen a `login.html?motivo=sesion` si no hay sesión activa, así que el agente no puede saltarse el login por URL directa.
