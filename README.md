@@ -1,8 +1,8 @@
 # Agente autónomo por voz para aplicativos web
 
-Prototipo académico de un **agente de interfaz gráfica (GUI Agent)** que ejecuta tareas sobre un aplicativo web a partir de instrucciones de voz en español, sin que el usuario necesite conocer la estructura de la interfaz ni los pasos de navegación.
+Prototipo académico de un **agente de interfaz gráfica (GUI Agent)** que ejecuta tareas completas sobre un aplicativo web a partir de una sola instrucción de voz en español. Por ejemplo, «envía cien mil pesos a mi hijo» se convierte en los diez pasos de una transferencia: navegar, elegir la cuenta, escribir la llave, consultar, escribir el monto, continuar, ingresar la clave dinámica y confirmar.
 
-La arquitectura se basa en el framework unificado de Wang et al. (2025) y lo adapta con un módulo transversal de **Seguridad y Verificación** (auditoría, gestión de credenciales y verificación de cada acción). El agente se evalúa sobre **Banco Sandbox**, un aplicativo bancario simulado incluido en este repositorio.
+El agente **aprende las rutas de una guía de procedimientos en Word**, permite **elegir el modelo de IA** que planifica (local, Claude, OpenAI, Gemini, Groq u Ollama) e incluye un **evaluador** para compararlos. La arquitectura se basa en el framework de Wang et al. (2025), con un módulo transversal de **Seguridad y Verificación**. Se evalúa sobre **Banco Sandbox**, un aplicativo bancario simulado incluido en este repositorio.
 
 > ⚠️ **Proyecto académico.** El agente está diseñado para operar solo sobre el entorno simulado incluido. No lo uses con aplicativos bancarios reales ni con credenciales reales.
 
@@ -10,13 +10,15 @@ La arquitectura se basa en el framework unificado de Wang et al. (2025) y lo ada
 
 ```mermaid
 flowchart LR
-    U(["Usuario"]) -- "instrucción por voz" --> C["Captura de<br/>Instrucciones"]
+    U(["Usuario"]) -- "instrucción" --> C["Captura de<br/>Instrucciones"]
     C --> P["Planificación<br/>de Tareas"]
-    P --> D["Decisión<br/>y Acción"]
+    K[("Conocimiento<br/>rutas de la guía Word")] --> P
+    IA{{"Modelo de IA<br/>local · Claude · OpenAI · Ollama…"}} -.-> P
+    P -- "plan de pasos" --> D["Decisión<br/>y Acción"]
     D -- "Playwright" --> A[("Aplicativo web<br/>Banco Sandbox")]
     A --> E["Percepción<br/>del Entorno"]
-    E --> P
-    S{{"Seguridad y Verificación<br/>auditoría · credenciales · verificación"}}
+    E --> D
+    S["Seguridad y Verificación<br/>auditoría · credenciales · verificación"]
     C -.-> S
     P -.-> S
     D -.-> S
@@ -25,34 +27,44 @@ flowchart LR
     S -. "retroalimentación" .-> P
 ```
 
-| Módulo | Implementación | Equivalente en Wang et al. |
-|---|---|---|
-| Captura de Instrucciones | `voz.py`, `capturar()`, `limpiar_dictado()` | Entrada del usuario |
-| Percepción del Entorno | `percibir()`: Playwright lee campos, botones y enlaces | GUI Perceiver |
-| Planificación de Tareas | `planificar()`: intención ESCRIBIR, CLIC, AUTENTICAR o SALIR | Task Planner |
-| Decisión y Acción | `mejor_match()` con embeddings multilingües + `ejecutar_escritura()` / `ejecutar_clic()` | Decision Maker + Executor |
-| Seguridad y Verificación | paquete `seguridad/` | Reemplaza al Memory Retriever |
+| Módulo | Carpeta | Qué hace | Equivalente en Wang et al. |
+|---|---|---|---|
+| Captura de Instrucciones | `captura/` | Voz (faster-whisper) o texto | Entrada del usuario |
+| Percepción del Entorno | `percepcion/` | Lee campos, listas, botones y datos de la pantalla | GUI Perceiver |
+| Planificación de Tareas | `planificacion/` | Instrucción → ruta + parámetros → plan de pasos | Task Planner |
+| Decisión y Acción | `decision_accion/` | Ejecuta cada paso: elegir elemento, actuar, verificar | Decision Maker + Executor |
+| Seguridad y Verificación | `seguridad/` | Auditoría, billetera de credenciales, verificación | Reemplaza al Memory Retriever |
+| Conocimiento | `conocimiento/` | Rutas aprendidas de la guía Word | Memoria externa (construcción manual) |
+| Modelos de IA | `ia/` | Proveedores intercambiables con una interfaz común | Modelo base (M)LLM |
 
-Cada comando de voz recorre el ciclo **captura → planificación → decisión y acción → verificación → percepción**, y cada módulo deja registro en la auditoría.
+### Dos modos de operación
+
+- **Modo tarea** (nuevo): la instrucción corresponde a una ruta de la guía. La IA identifica la ruta y extrae los datos; el agente pregunta lo que falte y ejecuta todos los pasos, verificando cada uno.
+- **Modo paso a paso** (versión 1): para comandos cortos que coinciden con un elemento visible («continuar», «consultar») o instrucciones que no corresponden a ninguna ruta.
+
+La IA **no improvisa clics**: solo elige entre las rutas de la guía y entre los elementos visibles. La ejecución sigue los pasos de la guía, y las credenciales nunca llegan al modelo de IA.
 
 ## Estructura del repositorio
 
 ```
 agente-autonomo-voz/
-├── agente_voz.py          Orquestador: captura, percepción, planificación, decisión y acción
-├── voz.py                 Reconocimiento de voz (ver nota en Instalación)
-├── seguridad/             Módulo de Seguridad y Verificación
-│   ├── __init__.py        Fachada: ModuloSeguridadVerificacion
-│   ├── __main__.py        Herramientas: python -m seguridad ...
-│   ├── auditoria.py       Log JSONL con marca de tiempo, encadenado por hash SHA-256
-│   ├── billetera.py       Credenciales cifradas por aplicativo (PBKDF2 + Fernet)
-│   ├── biometria.py       Verificación facial opcional (OpenCV YuNet + SFace)
-│   └── verificacion.py    Postcondiciones de cada acción y lectura de errores
-├── sandbox/               Banco Sandbox: aplicativo bancario simulado (HTML/JS)
+├── main.py                  Punto de entrada: integra todos los módulos
+├── configuracion.py         Ajustes: URL, umbrales, rutas y modelos de IA
+├── captura/                 captura.py (voz o texto) · voz.py (faster-whisper)
+├── percepcion/              percepcion.py: estado de la interfaz
+├── planificacion/           planificador.py (tareas) · comandos.py (pasos sueltos)
+├── decision_accion/         ejecutor.py (planes) · acciones.py · paso_a_paso.py
+├── seguridad/               Auditoría, billetera, biometría y verificación (ver su README)
+├── conocimiento/            lector_word.py · memoria.py · rutas/ (memoria aprendida)
+├── ia/                      local.py · anthropic.py · openai_compatible.py · extraccion.py
+├── evaluacion/              Comparación de modelos: casos.json y resultados/
+├── comun/                   Utilidades: texto y números en español
+├── guias/                   Guia_Banco_Sandbox.docx (documento de entrenamiento)
+├── sandbox/                 Banco Sandbox: aplicativo bancario simulado
 └── requirements.txt
 ```
 
-Se generan localmente y **no se versionan** (ver `.gitignore`): `credenciales.wallet`, `auditoria/` y `modelos/`.
+No se versionan (ver `.gitignore`): `credenciales.wallet`, `auditoria/`, `modelos/` y `.env`.
 
 ## Instalación
 
@@ -67,11 +79,9 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-`voz.py` debe estar en la raíz del proyecto y exponer la función `escuchar(modo="enter")`, que devuelve el texto reconocido. Agrega sus dependencias a `requirements.txt`.
+## Uso rápido
 
-## Uso
-
-**1. Levantar el aplicativo simulado** (en una terminal aparte):
+**1. Levantar el aplicativo simulado** (en otra terminal):
 
 ```bash
 python -m http.server 5173 -d sandbox
@@ -82,61 +92,124 @@ python -m http.server 5173 -d sandbox
 ```bash
 python -m seguridad crear
 python -m seguridad agregar --app banco_sandbox --nombre "Banco Sandbox" --origen http://localhost:5173
-python -m seguridad listar
 ```
 
-Con `agregar`, ingresa las credenciales de prueba del sandbox: usuario `demo.usuario`, clave `Sandbox2026` y un secreto adicional llamado `clave_dinamica` con valor `123456`.
+Credenciales del sandbox: usuario `demo.usuario`, clave `Sandbox2026` y un secreto adicional `clave_dinamica` con valor `123456`.
 
-**3. Ejecutar el agente:**
+**3. Entrenar al agente con la guía** (y cada vez que la modifiques):
 
 ```bash
-python agente_voz.py
+python -m conocimiento entrenar guias/Guia_Banco_Sandbox.docx
 ```
 
-Ejemplo de tarea completa (transferencia Bre-B), dicha comando por comando:
+**4. Ejecutar:**
 
-| Comando de voz | Resultado |
+```bash
+python main.py                      # voz + IA local
+python main.py --entrada texto      # escribir las instrucciones (pruebas)
+python main.py --ia claude          # planificar con Claude
+```
+
+Ejemplos de instrucciones:
+
+| Instrucción | Qué hace el agente |
 |---|---|
-| "usar mis credenciales" | Pide la clave maestra por teclado e inicia sesión con la billetera |
-| "enviar dinero" | Abre el formulario de envío |
-| "llave" → "arroba lucía" | Escribe `@lucia` |
-| "consultar" | Muestra el titular de la llave |
-| "monto" → "ciento cincuenta mil" | Escribe `150000` |
-| "continuar" | Pasa a la confirmación |
-| "clave dinámica" | La toma de la billetera, sin dictarla |
-| "enviar dinero" | Muestra el comprobante |
-| "salir" | Cierra la sesión del agente y la auditoría |
+| «¿Cuánto dinero tengo en la cuenta de ahorros?» | Si no hay sesión, ingresa con la billetera; luego lee el saldo |
+| «Transfiere ciento cincuenta mil pesos a Lucía» | Transferencia completa; pide confirmación antes de enviar |
+| «Manda cien mil a mi hijo» | Resuelve «mi hijo» con los contactos de la guía (@marco) |
+| «Quiero enviar dinero» | Pregunta a quién y cuánto antes de empezar |
+| «Dime el penúltimo movimiento» | Abre los movimientos y lee el segundo |
+| «Necesito el certificado tributario 2024 de la cuenta corriente» | Elige producto, tipo y año, genera el certificado y lee el folio |
+| «Continuar», «consultar» | Paso suelto sobre la pantalla actual (modo paso a paso) |
+| «Salir» | Apaga el agente («cerrar sesión» cierra la sesión del banco) |
+
+## Entrenamiento con guías Word
+
+La guía es un documento Word con un formato sencillo. El agente lo lee y genera una memoria de rutas en `conocimiento/rutas/` (JSON legible).
+
+- **Encabezado:** párrafos `Aplicativo:` y `Origen:` (la URL del aplicativo).
+- **Contactos:** tabla `Nombre | Alias | Llave`, para entender «a mi hijo» o «a Lucía».
+- **Procedimientos:** un título `Procedimiento: <nombre>` con identificador, descripción, frases de ejemplo y dos tablas:
+  - **Parámetros:** `Parámetro | Tipo | Obligatorio | Valores permitidos | Por defecto | Pregunta al usuario | Pista`. Tipos: `llave`, `monto`, `opcion`, `anio` y `texto`.
+  - **Pasos:** `# | Acción | Elemento | Valor | Confirmar | Resultado esperado`. Acciones: `ir_a`, `clic`, `escribir`, `seleccionar`, `leer` y `esperar`.
+
+Los valores entre llaves se reemplazan al ejecutar: `{monto}` por el parámetro y `{credencial:clave}` por el secreto de la billetera, en el último momento. La primera sección de `guias/Guia_Banco_Sandbox.docx` explica el formato con ejemplos.
+
+```bash
+python -m conocimiento entrenar guias/<guia>.docx   # valida y guarda la memoria
+python -m conocimiento listar                        # rutas aprendidas
+python -m conocimiento ver transferencia_breb        # pasos de una ruta
+```
+
+El entrenamiento valida la guía como un compilador: rechaza acciones desconocidas, parámetros no declarados, tipos inválidos o identificadores repetidos, e indica el procedimiento y el paso con el problema.
+
+## Modelos de IA
+
+| Nombre | Tipo | Requiere |
+|---|---|---|
+| `local` | Embeddings + reglas, sin internet | Nada (por defecto) |
+| `claude`, `claude-sonnet` | API de Anthropic | `ANTHROPIC_API_KEY` |
+| `openai` | API de OpenAI | `OPENAI_API_KEY` |
+| `gemini` | API de Google (formato OpenAI) | `GEMINI_API_KEY` |
+| `groq` | API de Groq (formato OpenAI) | `GROQ_API_KEY` |
+| `ollama` | Modelos locales (Llama, Qwen, Mistral…) | [Ollama](https://ollama.com) instalado |
+
+Las llaves van en variables de entorno o en un archivo `.env` en la raíz (excluido de git):
+
+```
+ANTHROPIC_API_KEY=...
+OPENAI_API_KEY=...
+```
+
+```bash
+python main.py --ia claude
+python main.py --ia ollama --modelo llama3.1:8b
+```
+
+Los nombres de modelo cambian con el tiempo: consulta los vigentes con `python -m evaluacion --listar-modelos <proveedor>` y úsalos con `--ia proveedor@modelo` (por ejemplo `--ia ollama@llama3.1:8b`). Para agregar otro proveedor con API compatible con OpenAI basta con una entrada nueva en `PROVEEDORES_IA`.
+
+Con `GROUNDING = "ia"` en `configuracion.py`, el modelo de IA también elige el elemento de pantalla de cada paso; por defecto lo hace la similitud semántica local, que es más rápida y no tiene costo.
+
+**Privacidad:** a los modelos externos solo se envían la instrucción, el catálogo de rutas (sin pasos) y los contactos de la guía. Nunca credenciales ni el contenido de la pantalla, salvo las etiquetas de los elementos cuando `GROUNDING = "ia"`.
+
+## Evaluación de modelos
+
+La ejecución de los pasos es determinística (sigue la guía), así que la diferencia entre modelos está en la **planificación**: identificar la ruta correcta y extraer bien los datos. El evaluador mide exactamente eso, sin abrir el navegador.
+
+```bash
+python -m evaluacion --listar-modelos claude openai gemini groq ollama   # modelos vigentes
+python -m evaluacion --ia local claude ollama@qwen2.5:7b ollama@llama3.1:8b
+python -m evaluacion --ia claude --repeticiones 3 --pausa 1              # estabilidad
+```
+
+Los casos de `evaluacion/casos.json` (37 instrucciones) están en seis categorías: directa, coloquial, por contacto, dictado por voz, incompleta y fuera de dominio. Ninguna coincide con las frases de ejemplo de la guía; el evaluador lo verifica y advierte si se agrega un caso que coincida, porque eso inflaría el resultado del modelo local.
+
+| Métrica | Significado |
+|---|---|
+| Acierto de ruta | Ruta correcta, o ninguna cuando la instrucción no corresponde a ninguna |
+| Exactitud de datos | Parámetros esperados extraídos con el valor correcto |
+| Casos completos | Ruta y todos los parámetros correctos |
+| Latencia | Mediana, media y máximo por instrucción |
+| Tokens | Entrada y salida (modelos LLM), para estimar costos |
+
+Resultados en `evaluacion/resultados/`, con separador `;` para Excel en español: `_resumen.csv` (por modelo), `_por_categoria.csv`, `_detalle.csv` (cada caso) y `_metadatos.json` (modelos, versión de la guía, casos y umbrales usados, para reproducir la corrida).
 
 ## Seguridad
 
-- **Credenciales fuera del razonamiento del agente.** Los campos sensibles (clave, clave dinámica, PIN) nunca se dictan por voz: el agente los detecta y toma el valor de la billetera, que lo entrega directamente al campo.
-- **Billetera cifrada.** La llave de cifrado se deriva de una clave maestra con PBKDF2-HMAC-SHA256 (600.000 iteraciones). La clave maestra se pide por teclado y no se almacena.
-- **Credenciales ligadas al origen.** Cada credencial solo se entrega al sitio registrado (esquema, host y puerto).
-- **Control de acceso.** Bloqueo temporal tras 3 intentos fallidos y re-bloqueo automático tras 5 minutos de inactividad.
-- **Verificación facial opcional.** Con `AUTENTICACION_FACIAL = True` en `agente_voz.py` se exige el rostro antes de entregar cada clave. Para registrarlo: `python -m seguridad enrolar-rostro`.
-
-## Auditoría y evidencia
-
-Cada ejecución crea `auditoria/<AAAAMMDD_HHMMSS_id>/` con:
-
-- `auditoria.log`: registro legible de cada evento, por módulo y paso.
-- `auditoria.jsonl`: registro estructurado; cada línea incluye el hash de la anterior.
-- `capturas/`: una captura por paso, con los campos sensibles ocultos.
-
-```bash
-python -m seguridad verificar auditoria/<sesion>   # detecta ediciones o líneas borradas
-python -m seguridad csv       auditoria/<sesion>   # exporta a CSV (separador ';' para Excel)
-```
-
-Los secretos nunca se escriben en el registro: se reemplazan por `••••••`.
+- **Credenciales fuera de la IA.** Los planes llevan referencias `{credencial:…}` que resuelve la billetera cifrada en el momento de escribir.
+- **Reglas que no dependen de la guía:** un campo sensible solo se llena desde la billetera, y un secreto solo se escribe en un campo sensible. Si una guía mal escrita lo intenta, el paso se bloquea y queda en la auditoría.
+- **Confirmación humana** en los pasos marcados con `Confirmar = Sí`, como enviar dinero.
+- **Ingreso automático controlado:** si una tarea encuentra la pantalla de ingreso, el agente ejecuta la ruta «ingresar» (con la clave maestra) y reintenta el paso una sola vez.
+- **Auditoría** de cada módulo con cadena de hashes, capturas con campos sensibles tapados y resumen de tareas exitosas y fallidas. Detalles en [`seguridad/README.md`](seguridad/README.md).
 
 ## Limitaciones
 
-- Prueba de concepto sobre un entorno simulado y controlado; no se valida con aplicativos reales.
-- La percepción usa los atributos del DOM (etiquetas, `placeholder`, `aria-label`), no visión por computador.
-- El porcentaje de confianza es la similitud coseno × 100, no una probabilidad.
-- La verificación facial no incluye detección de vida: una fotografía podría engañarla.
-- Mientras la billetera está desbloqueada, los secretos residen en la memoria del proceso.
+- Prueba de concepto sobre un entorno simulado y controlado.
+- El agente solo ejecuta tareas descritas en la guía; para tareas nuevas hay que agregar su procedimiento.
+- La percepción usa el DOM (etiquetas, `placeholder`, `aria-label`), no visión por computador.
+- El porcentaje de confianza es una similitud o una estimación del modelo, no una probabilidad calibrada.
+- La extracción por reglas del proveedor local cubre los tipos de parámetro definidos; los modelos LLM generalizan mejor en textos libres.
+- La verificación facial no incluye detección de vida.
 
 ## Referencias
 

@@ -35,7 +35,7 @@ El agente crea una sola instancia de `ModuloSeguridadVerificacion`, que compone 
 
 ```mermaid
 flowchart LR
-    AG["agente_voz.py<br/>Captura · Percepción<br/>Planificación · Decisión y Acción"]
+    AG["main.py y módulos del agente<br/>Captura · Percepción<br/>Planificación · Decisión y Acción"]
     F["ModuloSeguridadVerificacion<br/>__init__.py"]
     AU["Auditor<br/>auditoria.py"]
     VE["Verificador<br/>verificacion.py"]
@@ -101,7 +101,7 @@ seg.cerrar()   # bloquea la billetera, cierra la auditoría y verifica la cadena
 | Parámetro | Valor por defecto | Descripción |
 |---|---|---|
 | `ruta_billetera` | `credenciales.wallet` en la carpeta del proyecto | Archivo cifrado de credenciales. |
-| `carpeta_auditoria` | `auditoria` (relativa a la carpeta actual) | Carpeta de los logs. `agente_voz.py` pasa una ruta junto al script. |
+| `carpeta_auditoria` | `auditoria` (relativa a la carpeta actual) | Carpeta de los logs. `main.py` pasa `CARPETA_AUDITORIA` de `configuracion.py`. |
 | `autenticacion_facial` | `False` | Exige verificación facial antes de entregar cada secreto. |
 | `minutos_desbloqueo` | `5` | Minutos sin uso tras los cuales la billetera se vuelve a bloquear. |
 | `max_intentos` | `3` | Intentos de clave maestra antes del bloqueo temporal. |
@@ -199,16 +199,16 @@ El auditor mantiene una lista de valores protegidos y reemplaza cualquier aparic
 | `SISTEMA` | `inicio_sesion`, `fin_sesion`, `interrupcion`, `error_inesperado`, `captura_fallida` | URL, modelo y umbral; resumen final con contadores y duración. |
 | `CAPTURA` | `texto_capturado`, `captura_vacia`, `texto_normalizado`, `error_captura` | Texto reconocido, propósito (comando o texto a escribir), duración; original y normalizado. |
 | `PERCEPCION` | `estado_interfaz` | URL, título, campos (marcando los sensibles), botones y ruta de la captura. |
-| `PLANIFICACION` | `intencion`, `subtareas` | Comando, intención (`ESCRIBIR`, `CLIC`, `AUTENTICAR`, `SALIR`), regla y similitudes en %. |
-| `DECISION_ACCION` | `decision`, `accion` | Elemento elegido, similitud, `confianza_pct`, umbral, aceptado; tipo de acción, texto (enmascarado si es secreto) y éxito. |
-| `SEGURIDAD` | `campo_sensible`, `solicitud_credencial`, `autenticacion`, `credencial_entregada`, `credencial_denegada`, `acceso_bloqueado`, `billetera_bloqueada`, `billetera_inexistente`, `verificacion_facial` | Origen, nombre del secreto (nunca el valor), método y resultado de autenticación, intentos, similitud facial. |
+| `PLANIFICACION` | `modo`, `identificacion`, `plan`, `parametro_solicitado`, `plan_cancelado`, `precondicion`, `intencion`, `subtareas` | Modo (tarea o paso a paso); modelo de IA, ruta identificada, confianza, parámetros, latencia y tokens; pasos del plan; datos pedidos al usuario; ingreso automático. |
+| `DECISION_ACCION` | `plan_inicio`, `paso_plan`, `decision`, `accion`, `plan_resultado` | Paso del plan en curso; elemento elegido con su método (`exacto`, `embeddings` o `ia`) y `confianza_pct`; acción (`escribir`, `clic`, `seleccionar`, `ir_a`, `leer`) con su resultado; éxito, pasos completados, duración y datos leídos de la tarea. |
+| `SEGURIDAD` | `campo_sensible`, `solicitud_credencial`, `autenticacion`, `credencial_entregada`, `credencial_denegada`, `acceso_bloqueado`, `billetera_bloqueada`, `billetera_inexistente`, `verificacion_facial`, `confirmacion_usuario`, `politica_bloqueo` | Origen, nombre del secreto (nunca el valor), método y resultado de autenticación, intentos, similitud facial; confirmaciones del usuario y pasos bloqueados por las reglas de seguridad. |
 | `VERIFICACION` | `verificacion`, `retroalimentacion` | Resultado (`OK`, `FALLO`, `SIN_EFECTO`), criterio, cambios de URL y contenido, mensajes de la app; motivo del fallo. |
 
 ### Resumen de cierre
 
 `cerrar()` registra el evento `fin_sesion` con estos contadores y luego verifica la cadena completa:
 
-`eventos`, `acciones_ok`, `acciones_fallidas`, `verificaciones_ok`, `verificaciones_fallidas`, `alertas_seguridad`, `pasos`, `duracion_s`.
+`eventos`, `acciones_ok`, `acciones_fallidas`, `verificaciones_ok`, `verificaciones_fallidas`, `alertas_seguridad`, `tareas_ok`, `tareas_fallidas`, `pasos`, `duracion_s`.
 
 ---
 
@@ -377,7 +377,7 @@ Se ejecutan desde la carpeta del proyecto (la que contiene `seguridad/`):
 | `python -m seguridad verificar auditoria/<sesion>` | Comprueba la cadena de integridad de una sesión. |
 | `python -m seguridad csv auditoria/<sesion>` | Exporta la sesión a CSV con separador `;` (compatible con Excel en español). |
 
-Para usar un archivo distinto al predeterminado, pon `--billetera RUTA` **antes** del comando, por ejemplo `python -m seguridad --billetera pruebas.wallet crear`. Sirve para tener una billetera de pruebas con valores errados (casos de error de la evaluación); para que el agente la use, cambia `RUTA_BILLETERA` en `agente_voz.py`.
+Para usar un archivo distinto al predeterminado, pon `--billetera RUTA` **antes** del comando, por ejemplo `python -m seguridad --billetera pruebas.wallet crear`. Sirve para tener una billetera de pruebas con valores errados (casos de error de la evaluación); para que el agente la use, cambia `RUTA_BILLETERA` en `configuracion.py`.
 
 **Pruebas automatizadas:** si existe la variable de entorno `AGENTE_CLAVE_MAESTRA`, se usa su valor en lugar de pedir la clave por teclado. Úsala solo en pruebas, nunca con credenciales reales.
 

@@ -1,6 +1,17 @@
-playwright>=1.40            # mask_color en capturas requiere >= 1.35
-sentence-transformers>=2.2
-cryptography>=41
+# --- Núcleo del agente ---
+playwright>=1.40            # navegador; mask_color en capturas requiere >= 1.35
+sentence-transformers>=2.2  # similitud semántica (proveedor local y grounding)
+cryptography>=41            # billetera cifrada
+python-docx>=1.1            # entrenamiento con guías Word
 numpy
-opencv-python>=4.8          # OPCIONAL: solo para la verificacion facial
-# Agrega aqui las dependencias de voz.py (ej. faster-whisper, sounddevice)
+
+# --- Captura por voz (captura/voz.py) ---
+faster-whisper
+sounddevice
+av<19                       # PyAV 19 rompió la lectura de archivos en faster-whisper 1.2.1;
+                            # quitar este límite cuando salga una versión que lo corrija
+
+# --- Opcional ---
+opencv-python>=4.8          # solo para la verificación facial
+# Los modelos de IA externos (Claude, OpenAI, Gemini, Groq, Ollama) se llaman por
+# HTTP con la librería estándar: no requieren paquetes adicionales.

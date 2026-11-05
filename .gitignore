@@ -26,3 +26,6 @@ Thumbs.db
 desktop.ini
 ~$*
 .vscode/
+
+# ---- Resultados locales de evaluación (súbelos solo si los citas en el documento) ----
+evaluacion/resultados/

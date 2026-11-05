@@ -1,0 +1,55 @@
+{
+  "descripcion": "Casos de evaluación de la planificación. Ninguna instrucción coincide con las frases de ejemplo de la guía (el evaluador lo verifica). procedimiento null = ninguna ruta debe ejecutarse. Los parámetros esperados usan el formato normalizado del agente.",
+  "categorias": {
+    "directa": "Instrucción clara y formal",
+    "coloquial": "Español coloquial colombiano (plata, lucas, pásele)",
+    "contacto": "El destinatario se nombra por su alias (mi mamá, mi primo)",
+    "dictado": "Texto como lo entrega el reconocimiento de voz: sin tildes, cifras o números en palabras",
+    "incompleta": "Faltan datos obligatorios: el agente debe identificar la ruta y luego preguntar",
+    "fuera_de_dominio": "No corresponde a ninguna ruta: el agente no debe ejecutar nada"
+  },
+  "casos": [
+    {"categoria": "directa", "instruccion": "abre mi banca virtual con mis datos", "procedimiento": "ingresar", "parametros": {}},
+    {"categoria": "directa", "instruccion": "¿cuál es el saldo disponible en la cuenta corriente?", "procedimiento": "consultar_saldo", "parametros": {"cuenta": "corriente"}},
+    {"categoria": "directa", "instruccion": "realiza una transferencia de 75.000 pesos a la llave @marco", "procedimiento": "transferencia_breb", "parametros": {"llave": "@marco", "monto": 75000}},
+    {"categoria": "directa", "instruccion": "envía 300000 pesos a pagos@tienda.co desde la cuenta corriente", "procedimiento": "transferencia_breb", "parametros": {"llave": "pagos@tienda.co", "monto": 300000, "cuenta_origen": "Cuenta corriente"}},
+    {"categoria": "directa", "instruccion": "muéstrame el antepenúltimo movimiento de la cuenta", "procedimiento": "consultar_movimientos", "parametros": {"posicion": "2"}},
+    {"categoria": "directa", "instruccion": "genera el certificado de titularidad con saldo de la cuenta corriente", "procedimiento": "generar_certificado", "parametros": {"tipo": "Titularidad con saldo a la fecha", "producto": "Cuenta corriente"}},
+    {"categoria": "directa", "instruccion": "busca en las preguntas frecuentes información sobre el horario", "procedimiento": "buscar_ayuda", "parametros": {"tema": "horario"}},
+    {"categoria": "directa", "instruccion": "finaliza mi sesión en la banca en línea", "procedimiento": "cerrar_sesion", "parametros": {}},
+
+    {"categoria": "coloquial", "instruccion": "¿cuánta platica me queda en ahorros?", "procedimiento": "consultar_saldo", "parametros": {"cuenta": "ahorros"}},
+    {"categoria": "coloquial", "instruccion": "pásele veinte lucas a Marco", "procedimiento": "transferencia_breb", "parametros": {"llave": "@marco", "monto": 20000}},
+    {"categoria": "coloquial", "instruccion": "mándele cien mil a la ferretería", "procedimiento": "transferencia_breb", "parametros": {"llave": "@ferreteria", "monto": 100000}},
+    {"categoria": "coloquial", "instruccion": "hágame el favor y me dice qué gasté de último", "procedimiento": "consultar_movimientos", "parametros": {"posicion": "0"}},
+    {"categoria": "coloquial", "instruccion": "sáqueme un certificado para la declaración de renta del 2025", "procedimiento": "generar_certificado", "parametros": {"tipo": "Certificado tributario anual", "anio": "2025"}},
+    {"categoria": "coloquial", "instruccion": "necesito saber qué es eso de Bre-B, búscalo en la ayuda", "procedimiento": "buscar_ayuda", "parametros": {"tema": "bre-b"}},
+    {"categoria": "coloquial", "instruccion": "ya acabé, sáqueme de la banca", "procedimiento": "cerrar_sesion", "parametros": {}},
+    {"categoria": "coloquial", "instruccion": "quiero entrar a la banca, porfa", "procedimiento": "ingresar", "parametros": {}},
+
+    {"categoria": "contacto", "instruccion": "mándale doscientos mil a mi mamá", "procedimiento": "transferencia_breb", "parametros": {"llave": "3105558842", "monto": 200000}},
+    {"categoria": "contacto", "instruccion": "transfiérele 45 mil a mi primo con el concepto almuerzo", "procedimiento": "transferencia_breb", "parametros": {"llave": "1024587963", "monto": 45000, "descripcion": "almuerzo"}},
+    {"categoria": "contacto", "instruccion": "envíale un millón a mi hermana desde la corriente", "procedimiento": "transferencia_breb", "parametros": {"llave": "@lucia", "monto": 1000000, "cuenta_origen": "Cuenta corriente"}},
+    {"categoria": "contacto", "instruccion": "págale 80 mil a la tienda central", "procedimiento": "transferencia_breb", "parametros": {"llave": "pagos@tienda.co", "monto": 80000}},
+    {"categoria": "contacto", "instruccion": "hazle una consignación de 30.000 a Diana", "procedimiento": "transferencia_breb", "parametros": {"llave": "3105558842", "monto": 30000}},
+
+    {"categoria": "dictado", "instruccion": "transfiere 150.000 pesos a lucia.", "procedimiento": "transferencia_breb", "parametros": {"llave": "@lucia", "monto": 150000}},
+    {"categoria": "dictado", "instruccion": "envia ciento veinte mil a arroba marco", "procedimiento": "transferencia_breb", "parametros": {"llave": "@marco", "monto": 120000}},
+    {"categoria": "dictado", "instruccion": "Consulta el saldo de la cuenta corriente.", "procedimiento": "consultar_saldo", "parametros": {"cuenta": "corriente"}},
+    {"categoria": "dictado", "instruccion": "certificado tributario dos mil veinticuatro cuenta corriente", "procedimiento": "generar_certificado", "parametros": {"tipo": "Certificado tributario anual", "anio": "2024", "producto": "Cuenta corriente"}},
+    {"categoria": "dictado", "instruccion": "manda 50 mil al 310 555 8842", "procedimiento": "transferencia_breb", "parametros": {"llave": "3105558842", "monto": 50000}},
+    {"categoria": "dictado", "instruccion": "cual fue mi penultimo movimiento", "procedimiento": "consultar_movimientos", "parametros": {"posicion": "1"}},
+
+    {"categoria": "incompleta", "instruccion": "quiero transferirle plata a alguien", "procedimiento": "transferencia_breb", "parametros": {}},
+    {"categoria": "incompleta", "instruccion": "envíale dinero a Marco", "procedimiento": "transferencia_breb", "parametros": {"llave": "@marco"}},
+    {"categoria": "incompleta", "instruccion": "me puedes generar un certificado", "procedimiento": "generar_certificado", "parametros": {}},
+    {"categoria": "incompleta", "instruccion": "transfiere sesenta mil pesos", "procedimiento": "transferencia_breb", "parametros": {"monto": 60000}},
+
+    {"categoria": "fuera_de_dominio", "instruccion": "¿qué hora es?", "procedimiento": null, "parametros": {}},
+    {"categoria": "fuera_de_dominio", "instruccion": "pon música relajante", "procedimiento": null, "parametros": {}},
+    {"categoria": "fuera_de_dominio", "instruccion": "reserva un vuelo a Cartagena para mañana", "procedimiento": null, "parametros": {}},
+    {"categoria": "fuera_de_dominio", "instruccion": "¿cuál es la tasa de cambio del dólar hoy?", "procedimiento": null, "parametros": {}},
+    {"categoria": "fuera_de_dominio", "instruccion": "abre mi correo electrónico", "procedimiento": null, "parametros": {}},
+    {"categoria": "fuera_de_dominio", "instruccion": "pide un domicilio de pizza", "procedimiento": null, "parametros": {}}
+  ]
+}

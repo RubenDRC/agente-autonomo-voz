@@ -1,0 +1,606 @@
+{
+  "aplicativo": "Banco Sandbox",
+  "origen": "http://localhost:5173",
+  "contactos": [
+    {
+      "nombre": "Lucía Restrepo Gil",
+      "alias": [
+        "lucía",
+        "mi hermana"
+      ],
+      "llave": "@lucia"
+    },
+    {
+      "nombre": "Marco Peña Ruiz",
+      "alias": [
+        "marco",
+        "mi hijo"
+      ],
+      "llave": "@marco"
+    },
+    {
+      "nombre": "Diana Ospina Cárdenas",
+      "alias": [
+        "diana",
+        "mi mamá"
+      ],
+      "llave": "3105558842"
+    },
+    {
+      "nombre": "Ferretería El Tornillo",
+      "alias": [
+        "ferretería",
+        "el tornillo"
+      ],
+      "llave": "@ferreteria"
+    },
+    {
+      "nombre": "Julián Arias Mejía",
+      "alias": [
+        "julián",
+        "mi primo"
+      ],
+      "llave": "1024587963"
+    },
+    {
+      "nombre": "Tienda Central S.A.S.",
+      "alias": [
+        "tienda central",
+        "la tienda"
+      ],
+      "llave": "pagos@tienda.co"
+    }
+  ],
+  "procedimientos": [
+    {
+      "id": "ingresar",
+      "nombre": "Ingresar a la banca",
+      "descripcion": "Inicia sesión con el usuario y la clave guardados en la billetera de credenciales.",
+      "requiere_sesion": false,
+      "frases": [
+        "ingresa a mi banca en línea",
+        "inicia sesión",
+        "entra a mi cuenta del banco",
+        "usar mis credenciales",
+        "quiero ingresar al banco"
+      ],
+      "parametros": [],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "ir_a",
+          "objetivo": "login.html",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Pantalla de ingreso"
+        },
+        {
+          "n": 2,
+          "accion": "escribir",
+          "objetivo": "Usuario",
+          "valor": "{credencial:usuario}",
+          "confirmar": false,
+          "esperado": "El campo muestra el usuario"
+        },
+        {
+          "n": 3,
+          "accion": "escribir",
+          "objetivo": "Clave",
+          "valor": "{credencial:clave}",
+          "confirmar": false,
+          "esperado": "El campo queda lleno (oculto)"
+        },
+        {
+          "n": 4,
+          "accion": "clic",
+          "objetivo": "Entrar",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Aparece «Mis productos»"
+        }
+      ]
+    },
+    {
+      "id": "consultar_saldo",
+      "nombre": "Consultar saldo",
+      "descripcion": "Informa el saldo disponible de la cuenta de ahorros o de la cuenta corriente.",
+      "requiere_sesion": true,
+      "frases": [
+        "¿cuánto dinero tengo?",
+        "cuál es mi saldo",
+        "consulta el saldo de mi cuenta de ahorros",
+        "cuánta plata tengo en la cuenta corriente",
+        "dime cuánto hay en mi cuenta"
+      ],
+      "parametros": [
+        {
+          "nombre": "cuenta",
+          "tipo": "opcion",
+          "obligatorio": false,
+          "valores": [
+            {
+              "etiquetas": [
+                "ahorros"
+              ],
+              "valor": "ahorros"
+            },
+            {
+              "etiquetas": [
+                "corriente"
+              ],
+              "valor": "corriente"
+            }
+          ],
+          "defecto": "ahorros",
+          "pregunta": "¿De qué cuenta: ahorros o corriente?",
+          "pista": null
+        }
+      ],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "ir_a",
+          "objetivo": "inicio.html",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Pantalla «Mis productos»"
+        },
+        {
+          "n": 2,
+          "accion": "leer",
+          "objetivo": "testid:saldo-{cuenta}",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "El agente informa el saldo"
+        }
+      ]
+    },
+    {
+      "id": "transferencia_breb",
+      "nombre": "Transferencia Bre-B",
+      "descripcion": "Envía dinero a una llave Bre-B o a un contacto, desde la cuenta de ahorros o la corriente.",
+      "requiere_sesion": true,
+      "frases": [
+        "envía dinero a un contacto",
+        "transfiere cien mil pesos a Lucía",
+        "manda plata a mi hijo",
+        "hazle una transferencia Bre-B a Marco",
+        "pásale cincuenta mil a Diana",
+        "quiero enviar dinero"
+      ],
+      "parametros": [
+        {
+          "nombre": "llave",
+          "tipo": "llave",
+          "obligatorio": true,
+          "valores": [],
+          "defecto": null,
+          "pregunta": "¿A qué llave o contacto quieres enviar el dinero?",
+          "pista": null
+        },
+        {
+          "nombre": "monto",
+          "tipo": "monto",
+          "obligatorio": true,
+          "valores": [],
+          "defecto": null,
+          "pregunta": "¿Cuánto dinero quieres enviar?",
+          "pista": null
+        },
+        {
+          "nombre": "cuenta_origen",
+          "tipo": "opcion",
+          "obligatorio": false,
+          "valores": [
+            {
+              "etiquetas": [
+                "ahorros"
+              ],
+              "valor": "Cuenta de ahorros"
+            },
+            {
+              "etiquetas": [
+                "corriente"
+              ],
+              "valor": "Cuenta corriente"
+            }
+          ],
+          "defecto": "ahorros",
+          "pregunta": null,
+          "pista": null
+        },
+        {
+          "nombre": "descripcion",
+          "tipo": "texto",
+          "obligatorio": false,
+          "valores": [],
+          "defecto": null,
+          "pregunta": null,
+          "pista": "descripción|concepto|mensaje"
+        }
+      ],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "ir_a",
+          "objetivo": "inicio.html",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Pantalla «Mis productos»"
+        },
+        {
+          "n": 2,
+          "accion": "clic",
+          "objetivo": "Enviar dinero",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Formulario de envío"
+        },
+        {
+          "n": 3,
+          "accion": "seleccionar",
+          "objetivo": "Cuenta de origen",
+          "valor": "{cuenta_origen}",
+          "confirmar": false,
+          "esperado": "Cuenta elegida"
+        },
+        {
+          "n": 4,
+          "accion": "escribir",
+          "objetivo": "Llave de destino",
+          "valor": "{llave}",
+          "confirmar": false,
+          "esperado": "Llave escrita"
+        },
+        {
+          "n": 5,
+          "accion": "clic",
+          "objetivo": "Consultar",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Aparece el titular de la llave"
+        },
+        {
+          "n": 6,
+          "accion": "escribir",
+          "objetivo": "Monto a enviar",
+          "valor": "{monto}",
+          "confirmar": false,
+          "esperado": "Monto escrito"
+        },
+        {
+          "n": 7,
+          "accion": "escribir",
+          "objetivo": "Descripción",
+          "valor": "{descripcion}",
+          "confirmar": false,
+          "esperado": "Se omite si no se indicó"
+        },
+        {
+          "n": 8,
+          "accion": "clic",
+          "objetivo": "Continuar",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Pantalla de confirmación"
+        },
+        {
+          "n": 9,
+          "accion": "escribir",
+          "objetivo": "Clave dinámica",
+          "valor": "{credencial:clave_dinamica}",
+          "confirmar": false,
+          "esperado": "Clave tomada de la billetera"
+        },
+        {
+          "n": 10,
+          "accion": "clic",
+          "objetivo": "Enviar dinero",
+          "valor": null,
+          "confirmar": true,
+          "esperado": "Comprobante de éxito"
+        }
+      ]
+    },
+    {
+      "id": "consultar_movimientos",
+      "nombre": "Consultar movimientos",
+      "descripcion": "Informa el último movimiento, el penúltimo o el antepenúltimo.",
+      "requiere_sesion": true,
+      "frases": [
+        "¿cuál fue mi último movimiento?",
+        "muéstrame mis movimientos",
+        "cuál fue el penúltimo movimiento",
+        "qué fue lo último que pagué",
+        "revisa mis movimientos recientes"
+      ],
+      "parametros": [
+        {
+          "nombre": "posicion",
+          "tipo": "opcion",
+          "obligatorio": false,
+          "valores": [
+            {
+              "etiquetas": [
+                "último",
+                "ultimo",
+                "más reciente"
+              ],
+              "valor": "0"
+            },
+            {
+              "etiquetas": [
+                "penúltimo"
+              ],
+              "valor": "1"
+            },
+            {
+              "etiquetas": [
+                "antepenúltimo"
+              ],
+              "valor": "2"
+            }
+          ],
+          "defecto": "último",
+          "pregunta": null,
+          "pista": null
+        }
+      ],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "ir_a",
+          "objetivo": "inicio.html",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Pantalla «Mis productos»"
+        },
+        {
+          "n": 2,
+          "accion": "clic",
+          "objetivo": "Movimientos",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Tabla de movimientos"
+        },
+        {
+          "n": 3,
+          "accion": "leer",
+          "objetivo": "testid:movimiento-{posicion}",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "El agente informa el movimiento"
+        }
+      ]
+    },
+    {
+      "id": "generar_certificado",
+      "nombre": "Generar certificado",
+      "descripcion": "Genera un certificado de titularidad, de titularidad con saldo o tributario.",
+      "requiere_sesion": true,
+      "frases": [
+        "genera un certificado de titularidad",
+        "necesito un certificado bancario",
+        "expide el certificado tributario de mi cuenta",
+        "quiero un certificado con saldo de la cuenta de ahorros",
+        "descarga un certificado de mi cuenta corriente"
+      ],
+      "parametros": [
+        {
+          "nombre": "producto",
+          "tipo": "opcion",
+          "obligatorio": false,
+          "valores": [
+            {
+              "etiquetas": [
+                "ahorros"
+              ],
+              "valor": "Cuenta de ahorros"
+            },
+            {
+              "etiquetas": [
+                "corriente"
+              ],
+              "valor": "Cuenta corriente"
+            }
+          ],
+          "defecto": "ahorros",
+          "pregunta": "¿De qué cuenta?",
+          "pista": null
+        },
+        {
+          "nombre": "tipo",
+          "tipo": "opcion",
+          "obligatorio": true,
+          "valores": [
+            {
+              "etiquetas": [
+                "titularidad con saldo",
+                "con saldo"
+              ],
+              "valor": "Titularidad con saldo a la fecha"
+            },
+            {
+              "etiquetas": [
+                "titularidad"
+              ],
+              "valor": "Titularidad de la cuenta"
+            },
+            {
+              "etiquetas": [
+                "tributario",
+                "tributaria",
+                "renta"
+              ],
+              "valor": "Certificado tributario anual"
+            }
+          ],
+          "defecto": null,
+          "pregunta": "¿Qué tipo de certificado: titularidad, titularidad con saldo o tributario?",
+          "pista": null
+        },
+        {
+          "nombre": "anio",
+          "tipo": "anio",
+          "obligatorio": false,
+          "valores": [],
+          "defecto": null,
+          "pregunta": null,
+          "pista": null
+        },
+        {
+          "nombre": "dirigido",
+          "tipo": "texto",
+          "obligatorio": false,
+          "valores": [],
+          "defecto": null,
+          "pregunta": null,
+          "pista": "dirigido a|dirigida a"
+        }
+      ],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "ir_a",
+          "objetivo": "inicio.html",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Pantalla «Mis productos»"
+        },
+        {
+          "n": 2,
+          "accion": "clic",
+          "objetivo": "Certificados",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Formulario de certificados"
+        },
+        {
+          "n": 3,
+          "accion": "seleccionar",
+          "objetivo": "Producto",
+          "valor": "{producto}",
+          "confirmar": false,
+          "esperado": "Cuenta elegida"
+        },
+        {
+          "n": 4,
+          "accion": "seleccionar",
+          "objetivo": "Tipo de certificado",
+          "valor": "{tipo}",
+          "confirmar": false,
+          "esperado": "Tipo elegido"
+        },
+        {
+          "n": 5,
+          "accion": "seleccionar",
+          "objetivo": "Año gravable",
+          "valor": "{anio}",
+          "confirmar": false,
+          "esperado": "Solo para el tributario"
+        },
+        {
+          "n": 6,
+          "accion": "escribir",
+          "objetivo": "Dirigido a",
+          "valor": "{dirigido}",
+          "confirmar": false,
+          "esperado": "Se omite si no se indicó"
+        },
+        {
+          "n": 7,
+          "accion": "clic",
+          "objetivo": "Generar certificado",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Documento del certificado"
+        },
+        {
+          "n": 8,
+          "accion": "leer",
+          "objetivo": "testid:certificado-folio",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "El agente informa el folio"
+        }
+      ]
+    },
+    {
+      "id": "buscar_ayuda",
+      "nombre": "Buscar en preguntas frecuentes",
+      "descripcion": "Busca un tema en las preguntas frecuentes e informa cuántos resultados hay.",
+      "requiere_sesion": true,
+      "frases": [
+        "busca en la ayuda qué es una llave",
+        "tengo una pregunta sobre certificados",
+        "consulta las preguntas frecuentes sobre seguridad",
+        "busca ayuda acerca de Bre-B"
+      ],
+      "parametros": [
+        {
+          "nombre": "tema",
+          "tipo": "texto",
+          "obligatorio": true,
+          "valores": [],
+          "defecto": null,
+          "pregunta": "¿Qué tema quieres buscar?",
+          "pista": "sobre|qué es|acerca de"
+        }
+      ],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "ir_a",
+          "objetivo": "ayuda.html",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Preguntas frecuentes"
+        },
+        {
+          "n": 2,
+          "accion": "escribir",
+          "objetivo": "Buscar en las preguntas",
+          "valor": "{tema}",
+          "confirmar": false,
+          "esperado": "Se filtran las preguntas"
+        },
+        {
+          "n": 3,
+          "accion": "leer",
+          "objetivo": "testid:conteo-resultados",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "El agente informa el conteo"
+        }
+      ]
+    },
+    {
+      "id": "cerrar_sesion",
+      "nombre": "Cerrar sesión",
+      "descripcion": "Cierra la sesión de la banca en línea. La palabra «salir» está reservada para apagar el agente.",
+      "requiere_sesion": true,
+      "frases": [
+        "cierra mi sesión",
+        "cerrar sesión",
+        "desconéctame del banco",
+        "termina mi sesión del banco"
+      ],
+      "parametros": [],
+      "pasos": [
+        {
+          "n": 1,
+          "accion": "clic",
+          "objetivo": "Cerrar sesión",
+          "valor": null,
+          "confirmar": false,
+          "esperado": "Vuelve a la portada"
+        }
+      ]
+    }
+  ],
+  "fuente": {
+    "archivo": "Guia_Banco_Sandbox.docx",
+    "sha256": "e8dce521acd515fe9b4f4e6dcdb9f5f690be2021f17b6443995646c514e92cf8",
+    "entrenado": "2026-10-22T15:00:12-05:00"
+  }
+}

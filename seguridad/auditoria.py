@@ -80,6 +80,8 @@ class Auditor:
             "verificaciones_ok": 0,
             "verificaciones_fallidas": 0,
             "alertas_seguridad": 0,
+            "tareas_ok": 0,
+            "tareas_fallidas": 0,
         }
 
     # ------------------------------------------------------------------
@@ -152,6 +154,8 @@ class Auditor:
             clave = ("verificaciones_ok" if datos.get("resultado") == "OK"
                      else "verificaciones_fallidas")
             self.contadores[clave] += 1
+        if modulo == "DECISION_ACCION" and evento == "plan_resultado":
+            self.contadores["tareas_ok" if datos.get("exito") else "tareas_fallidas"] += 1
         if modulo == "SEGURIDAD" and nivel in ("WARN", "ERROR"):
             self.contadores["alertas_seguridad"] += 1
 
